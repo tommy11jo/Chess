@@ -42,4 +42,8 @@ public abstract class Piece {
 		this.isWhite = isWhite;
 	}
 	
+	public String toString () {
+		return getName();
+	}
+	
 }

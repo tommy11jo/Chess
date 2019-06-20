@@ -1,3 +1,12 @@
+/* By Tommy Joseph
+ * A SIMPLE CHESS GAME
+ * WEAKNESS: I verified if the King is in check by shooting out rays from the King.
+ * This strategy works but is more complicated than necessary. 
+ * I could just shoot rays from the moved piece each time. Hindsight is 20-20.
+ * NEXT STEPS: 
+ * 1. checking if pawn/knight puts king in check
+ * 2. preventing king from taking while "checking" piece is protected
+ */
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -7,7 +16,9 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -15,9 +26,7 @@ import javax.swing.JPanel;
 
 import org.omg.CORBA.portable.InputStream;
 public class LoadBoard extends JPanel implements MouseListener, MouseMotionListener{
-	
-	//ArrayList<Piece> pieces = new ArrayList<Piece>();
-	
+		
 	private Piece [][] pieces;
 	
 	private Color lightCol, darkCol;
@@ -46,15 +55,23 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 		addMouseMotionListener(this);	
 	}
 	
-	public void move (Piece p, Loc goalLoc) {
+	public Piece[][] move (Piece p, Loc goalLoc) {
 		//converting pixel locations to array location
+		//create dummy of pieces
+		Piece[][] holder = new Piece[8][8];
+		for(int row = 0; row < pieces.length; row++) {
+			for(int col = 0; col < pieces[0].length; col++) {
+				holder[row][col] = pieces[row][col];
+			}
+		}
+		
 		double d = 0.01;
 		Loc start = curLoc.scaledBy(d);
 		Loc end = goalLoc.scaledBy(d);
 		
 		//tests for valid move and also keeps track of King location for future use in checking check
-		if(p.isValid(start, end, pieces)) {
-			pieces[end.getY()][end.getX()] = p;
+		if(p.isWhite() == whiteTurn && p.isValid(start, end, holder)) {
+			holder[end.getY()][end.getX()] = p;
 			if(p.getName().equals("King")) {
 				if(p.isWhite()) {
 					whiteKing = (King) p;
@@ -62,11 +79,11 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 				else
 					blackKing = (King) p;
 			}
-			pieces[start.getY()][start.getX()] = null;
-			whiteTurn = !whiteTurn;
+			holder[start.getY()][start.getX()] = null;
 		}
 		else
 			System.out.println("Invalid");
+		return holder;
 	}
 	
 	public void paintComponent(Graphics g) {
@@ -181,10 +198,9 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 		// TODO Auto-generated method stub
 		
 		if(mousePressed)
-			mouseLoc = new Loc(e.getX(), e.getY());
-		//problem is with curLoc; should be goalLoc or something...
-		
+			mouseLoc = new Loc(e.getX(), e.getY());		
 	}
+	
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		// TODO Auto-generated method stub
@@ -195,19 +211,27 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 			double d = 0.01;
 			boolean sameLoc = goalLoc.scaledBy(d).equals(curLoc.scaledBy(d));
 			if(currentPiece.isWhite() == whiteTurn && !sameLoc)
-				if(legalKings())
-					move(currentPiece, goalLoc);
-				else if(currentPiece.getName().equals("King"))
-					//moving while in check
-					move(currentPiece, goalLoc);
 				
+				if(legalKings(pieces, whiteTurn)) {
+					pieces = move(currentPiece, goalLoc);
+					whiteTurn = !whiteTurn;
+				}
+				else if(legalKings(move(currentPiece, goalLoc), whiteTurn)) {
+					pieces = move(currentPiece, goalLoc);
+					whiteTurn = !whiteTurn;
+				}	
+				else {
+					System.out.println("Invalid Move");
+				}
 		}
 		else System.out.println("Cannot move here");
 	}
-	public boolean legalKings() {
-		if(whiteTurn)
-			return !whiteKing.inCheck(pieces);
-		return !blackKing.inCheck(pieces);
+	
+	public boolean legalKings(Piece[][] p, boolean whiteMove) {
+		if(whiteMove) {
+			return !whiteKing.inCheck(p);
+		}
+		return !blackKing.inCheck(p);
 	}
 
 	@Override

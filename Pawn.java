@@ -28,7 +28,8 @@ public class Pawn extends Piece {
 			hasMoved = true;
 			return true;
 		}
-		if(end.getY()-start.getY() == sum && Math.abs(end.getX() - start.getX()) == 1 && pieces[end.getY()][end.getX()].isWhite() != isWhite())
+		Piece endP = pieces[end.getY()][end.getX()];
+		if(end.getY()-start.getY() == sum && Math.abs(end.getX() - start.getX()) == 1 && endP != null && endP.isWhite() != isWhite())
 			return true;
 		if(!hasMoved && end.getY()-start.getY() == sum2 && end.getX() == start.getX() && pieces[start.getY()+sum2][start.getX()] == null) {
 			hasMoved = true;
