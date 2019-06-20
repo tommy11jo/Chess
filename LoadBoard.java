@@ -1,11 +1,10 @@
 /* By Tommy Joseph
  * A SIMPLE CHESS GAME
- * WEAKNESS: I verified if the King is in check by shooting out rays from the King.
- * This strategy works but is more complicated than necessary. 
- * I could just shoot rays from the moved piece each time. Hindsight is 20-20.
+ * UPDATE: Efficiency greatly improved by shooting rays from pieces once they are moved, 
+ * rather than from the king after every move
  * NEXT STEPS: 
- * 1. checking if pawn/knight puts king in check
- * 2. preventing king from taking while "checking" piece is protected
+ * 1. Pins - I could do this by keeping track of "intersected" pieces, pieces that come between
+ * an attacking piece and the opposing king. Before each move, I could check this array.
  */
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -22,23 +21,17 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 	
 	private Color lightCol, darkCol;
 	
-	private Piece currentPiece;
-	
-	private Piece previousPiece;
+	private Piece currentPiece, previousPiece;
 	
 	private Loc prevGoalLoc;
 	
-	private Loc curLoc;
-	
-	private Loc mouseLoc;
+	private Loc curLoc, mouseLoc;
 	
 	private boolean whiteTurn;
 	
 	private boolean mousePressed;
 	
-	private King whiteKing;
-	
-	private King blackKing;
+	private King whiteKing, blackKing;
 	
 	public LoadBoard () {
 		lightCol = new Color(224, 190, 130);
@@ -54,7 +47,6 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 	
 	public Piece[][] move (Piece p, Loc goalLoc) {
 		//converting pixel locations to array location
-		//create dummy of pieces
 		Piece[][] holder = new Piece[8][8];
 		for(int row = 0; row < pieces.length; row++) {
 			for(int col = 0; col < pieces[0].length; col++) {
@@ -66,7 +58,6 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 		Loc start = curLoc.scaledBy(d);
 		Loc end = goalLoc.scaledBy(d);
 		//tests for valid move and also keeps track of King location for future use in checking check
-		//if(p.isWhite() == whiteTurn && p.isValid(start, end, holder) && (whiteTurn? !whiteKing.isInCheck(): !blackKing.isInCheck())) {
 		if(p.isWhite() == whiteTurn && p.isValid(start, end, holder)) {
 			holder[end.getY()][end.getX()] = p;
 			if(p.getName().equals("King")) {
@@ -100,10 +91,8 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 			if(currentPiece.isWhite() == whiteTurn && !sameLoc) {
 				
 				King k = whiteTurn ? whiteKing: blackKing;
-				//if(whiteTurn ? !k.isInCheck(): !k.isInCheck() || !setChecks(previousPiece, goalLoc.scaledBy(d), move(currentPiece, goalLoc))) {
 				if(!k.isInCheck() || !setChecks(previousPiece, prevGoalLoc.scaledBy(d), move(currentPiece, goalLoc))) {
 					pieces = move(currentPiece, goalLoc);
-					//whiteTurn = !whiteTurn;
 				}
 				else {
 						System.out.println("Invalid Move");
