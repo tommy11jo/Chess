@@ -26,5 +26,17 @@ public class Bishop extends Piece{
 		// TODO Auto-generated method stub
 		return "Bishop";
 	}
+	@Override
+	public boolean isCheckingKing(Loc bishopLoc, Loc kingLoc, Piece[][] pieces) {
+		Loc delta = bishopLoc.minus(kingLoc);
+		int dx = delta.getX();
+		int dy = delta.getY();
+		
+		Piece firstIntersect = null;
+		if(Math.abs(dx) == Math.abs(dy)) {
+			firstIntersect = intersectPiece(bishopLoc, new Loc(dx > 0 ? -1:1, dy > 0 ? -1:1), pieces);
+		}
+		return firstIntersect!= null && (firstIntersect.getName().equals("King") && firstIntersect.isWhite() != isWhite());
+	}
 
 }

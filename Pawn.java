@@ -11,11 +11,7 @@ public class Pawn extends Piece {
 		super.setWhite(img.equals("WhitePawn.png"));
 		hasMoved = false;
 	}
-
-
-	public static Image setUpImage () {
-		return null;
-	}
+	
 	@Override
 	public boolean isValid (Loc start, Loc end, Piece[][] pieces) {
 		int sum = 1;
@@ -36,6 +32,14 @@ public class Pawn extends Piece {
 			return true;
 		}
 		return false;
+	}
+	
+	public boolean isCheckingKing (Loc pawnLoc, Loc kingLoc, Piece[][] pieces) {
+		Loc delta = kingLoc.minus(pawnLoc);
+		if(isWhite()) {
+			return delta.equals(new Loc(1, -1)) || delta.equals(new Loc(-1, -1));
+		}
+		return delta.equals(new Loc(-1, 1)) || delta.equals(new Loc(1, 1));
 	}
 	@Override
 	public String getName() {

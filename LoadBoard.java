@@ -11,20 +11,11 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
 
-import javax.imageio.ImageIO;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import org.omg.CORBA.portable.InputStream;
 public class LoadBoard extends JPanel implements MouseListener, MouseMotionListener{
 		
 	private Piece [][] pieces;
@@ -32,6 +23,10 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 	private Color lightCol, darkCol;
 	
 	private Piece currentPiece;
+	
+	private Piece previousPiece;
+	
+	private Loc prevGoalLoc;
 	
 	private Loc curLoc;
 	
@@ -50,7 +45,9 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 		darkCol = new Color(175, 120, 0);
 		pieces = new Piece [8][8];
 		whiteTurn = true;
+		prevGoalLoc = new Loc(0, 0);
 		setUpPieces();
+		previousPiece = pieces[1][1];
 		addMouseListener(this);
 		addMouseMotionListener(this);	
 	}
@@ -68,8 +65,8 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 		double d = 0.01;
 		Loc start = curLoc.scaledBy(d);
 		Loc end = goalLoc.scaledBy(d);
-		
 		//tests for valid move and also keeps track of King location for future use in checking check
+		//if(p.isWhite() == whiteTurn && p.isValid(start, end, holder) && (whiteTurn? !whiteKing.isInCheck(): !blackKing.isInCheck())) {
 		if(p.isWhite() == whiteTurn && p.isValid(start, end, holder)) {
 			holder[end.getY()][end.getX()] = p;
 			if(p.getName().equals("King")) {
@@ -79,13 +76,53 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 				else
 					blackKing = (King) p;
 			}
+			King k = p.isWhite() ? blackKing: whiteKing;
+			k.setInCheck(setChecks(p, end, holder));
 			holder[start.getY()][start.getX()] = null;
+			whiteTurn =!whiteTurn;
 		}
-		else
+		else {
 			System.out.println("Invalid");
+		}
+		
 		return holder;
 	}
 	
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+		mousePressed = false;
+		if(currentPiece != null && e.getX() < 800 && e.getY() < 800) {
+			Loc goalLoc = new Loc (e.getX(), e.getY());
+			double d = 0.01;
+			boolean sameLoc = goalLoc.scaledBy(d).equals(curLoc.scaledBy(d));
+			if(currentPiece.isWhite() == whiteTurn && !sameLoc) {
+				
+				King k = whiteTurn ? whiteKing: blackKing;
+				//if(whiteTurn ? !k.isInCheck(): !k.isInCheck() || !setChecks(previousPiece, goalLoc.scaledBy(d), move(currentPiece, goalLoc))) {
+				if(!k.isInCheck() || !setChecks(previousPiece, prevGoalLoc.scaledBy(d), move(currentPiece, goalLoc))) {
+					pieces = move(currentPiece, goalLoc);
+					//whiteTurn = !whiteTurn;
+				}
+				else {
+						System.out.println("Invalid Move");
+				}
+				prevGoalLoc = goalLoc;
+				previousPiece = currentPiece;
+			}
+		}
+		else System.out.println("Cannot move here");
+	}
+
+	private boolean setChecks(Piece p, Loc end, Piece[][] holder) {
+		// TODO Auto-generated method stub
+		King k = p.isWhite() ? blackKing: whiteKing;
+		if(p.isCheckingKing(end, k.getLoc(), holder))
+			return true;
+		return false;
+	}
+
 	public void paintComponent(Graphics g) {
 		//Update 1: accounts for order of pieces/proper precedence
 		super.paintComponent(g);
@@ -201,39 +238,7 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 			mouseLoc = new Loc(e.getX(), e.getY());		
 	}
 	
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-		mousePressed = false;
-		if(currentPiece != null && e.getX() < 800 && e.getY() < 800) {
-			Loc goalLoc = new Loc (e.getX(), e.getY());
-			double d = 0.01;
-			boolean sameLoc = goalLoc.scaledBy(d).equals(curLoc.scaledBy(d));
-			if(currentPiece.isWhite() == whiteTurn && !sameLoc)
-				
-				if(legalKings(pieces, whiteTurn)) {
-					pieces = move(currentPiece, goalLoc);
-					whiteTurn = !whiteTurn;
-				}
-				else if(legalKings(move(currentPiece, goalLoc), whiteTurn)) {
-					pieces = move(currentPiece, goalLoc);
-					whiteTurn = !whiteTurn;
-				}	
-				else {
-					System.out.println("Invalid Move");
-				}
-		}
-		else System.out.println("Cannot move here");
-	}
 	
-	public boolean legalKings(Piece[][] p, boolean whiteMove) {
-		if(whiteMove) {
-			return !whiteKing.inCheck(p);
-		}
-		return !blackKing.inCheck(p);
-	}
-
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		// TODO Auto-generated method stub

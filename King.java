@@ -1,9 +1,11 @@
 
 public class King extends Piece{
 	private Loc loc;
+	private boolean inCheck;
 	public King (String img) {
 		super(img);
 		super.setWhite(img.equals("WhiteKing.PNG"));
+		setInCheck(false);
 	
 	}
 	
@@ -11,6 +13,7 @@ public class King extends Piece{
 		super(img);
 		super.setWhite(img.equals("WhiteKing.PNG"));
 		this.loc = loc;
+		setInCheck(false);
 	}
 	@Override
 	public boolean isValid (Loc start, Loc end, Piece[][] pieces) {
@@ -21,40 +24,7 @@ public class King extends Piece{
 		return false;
 	}
 	
-	public boolean inCheck (Piece[][] pieces) {
-		/*8 directions (4 lines) to be tested 
-		 * (x, y)
-		 * (1, 1) and (-1, -1)
-		 * (1, -1) and (-1, 1)
-		 * (0, 1) and (0, -1)
-		 * (-1, 0) and (1, 0)
-		*/
-		//System.out.println("check tested");
-		boolean inCheck = false;
-		Loc dir1 = new Loc (1, 1);
-		Loc [] diagDirs = {new Loc(1, -1), new Loc(-1, 1), new Loc(1, 1), new Loc(-1, -1)}; 
-		Loc[] straightDirs = {new Loc(0, 1), new Loc(0, -1), new Loc(-1, 0), new Loc(1, 0)};
-		for(Loc dir: diagDirs) {
-			Piece intersect = intersectPiece(dir, pieces);
-			String intersectName = "";
-			if(intersect != null) {
-				intersectName = intersect.getName();
-				if(intersect.isWhite() != isWhite() && (intersectName.equals("Bishop") || intersectName.equals("Queen")))
-					inCheck = true;
-			}
-		}
-		for(Loc dir: straightDirs) {
-			Piece intersect = intersectPiece(dir, pieces);
-			String intersectName = "";
-			if(intersect != null) {
-				intersectName = intersect.getName();
-				if(intersect.isWhite() != isWhite() && (intersectName.equals("Rook") || intersectName.equals("Queen")))
-					inCheck = true;
-			}
-		}
-		
-		return inCheck;
-	}
+	
 	public Piece intersectPiece(Loc dir, Piece[][] pieces) {
 		int dx = dir.getX();
 		int dy = dir.getY();
@@ -83,5 +53,19 @@ public class King extends Piece{
 	}
 	public void setLoc(Loc loc) {
 		this.loc = loc;
+	}
+
+	@Override
+	public boolean isCheckingKing(Loc pieceLoc, Loc KingLoc, Piece[][] pieces) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public boolean isInCheck() {
+		return inCheck;
+	}
+
+	public void setInCheck(boolean inCheck) {
+		this.inCheck = inCheck;
 	}
 }
