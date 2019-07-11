@@ -24,4 +24,10 @@ public class Knight extends Piece{
 		// TODO Auto-generated method stub
 		return "Knight";
 	}
+	@Override
+	public boolean isCheckingKing(Loc knightLoc, Loc kingLoc, Piece[][] pieces) {
+		Loc delta = kingLoc.minus(knightLoc);
+		return delta.equals(new Loc(-1, -2)) || delta.equals(new Loc(-1, 2)) || delta.equals(new Loc(1, 2)) ||
+				delta.equals(new Loc(-2, -1)) || delta.equals(new Loc(2, -1)) || delta.equals(new Loc (-2, 1));
+	}
 }

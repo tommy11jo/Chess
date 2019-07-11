@@ -1,60 +1,65 @@
+/* By Tommy Joseph
+ * A SIMPLE CHESS GAME
+ * UPDATE: Efficiency greatly improved by shooting rays from pieces once they are moved, 
+ * rather than from the king after every move
+ * NEXT STEPS: 
+ * 1. Pins - I could do this by keeping track of "intersected" pieces, pieces that come between
+ * an attacking piece and the opposing king. Before each move, I could check this array.
+ */
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 
-import javax.imageio.ImageIO;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import org.omg.CORBA.portable.InputStream;
 public class LoadBoard extends JPanel implements MouseListener, MouseMotionListener{
-	
-	//ArrayList<Piece> pieces = new ArrayList<Piece>();
-	
+		
 	private Piece [][] pieces;
 	
 	private Color lightCol, darkCol;
 	
-	private Piece currentPiece;
+	private Piece currentPiece, previousPiece;
 	
-	private Loc curLoc;
+	private Loc prevGoalLoc;
 	
-	private Loc mouseLoc;
+	private Loc curLoc, mouseLoc;
 	
 	private boolean whiteTurn;
 	
 	private boolean mousePressed;
 	
-	private King whiteKing;
-	
-	private King blackKing;
+	private King whiteKing, blackKing;
 	
 	public LoadBoard () {
 		lightCol = new Color(224, 190, 130);
 		darkCol = new Color(175, 120, 0);
 		pieces = new Piece [8][8];
 		whiteTurn = true;
+		prevGoalLoc = new Loc(0, 0);
 		setUpPieces();
+		previousPiece = pieces[1][1];
 		addMouseListener(this);
 		addMouseMotionListener(this);	
 	}
 	
-	public void move (Piece p, Loc goalLoc) {
+	public Piece[][] move (Piece p, Loc goalLoc) {
 		//converting pixel locations to array location
+		Piece[][] holder = new Piece[8][8];
+		for(int row = 0; row < pieces.length; row++) {
+			for(int col = 0; col < pieces[0].length; col++) {
+				holder[row][col] = pieces[row][col];
+			}
+		}
+		
 		double d = 0.01;
 		Loc start = curLoc.scaledBy(d);
 		Loc end = goalLoc.scaledBy(d);
-		
 		//tests for valid move and also keeps track of King location for future use in checking check
-		if(p.isValid(start, end, pieces)) {
-			pieces[end.getY()][end.getX()] = p;
+		if(p.isWhite() == whiteTurn && p.isValid(start, end, holder)) {
+			holder[end.getY()][end.getX()] = p;
 			if(p.getName().equals("King")) {
 				if(p.isWhite()) {
 					whiteKing = (King) p;
@@ -62,13 +67,51 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 				else
 					blackKing = (King) p;
 			}
-			pieces[start.getY()][start.getX()] = null;
-			whiteTurn = !whiteTurn;
+			King k = p.isWhite() ? blackKing: whiteKing;
+			k.setInCheck(setChecks(p, end, holder));
+			holder[start.getY()][start.getX()] = null;
+			whiteTurn =!whiteTurn;
 		}
-		else
+		else {
 			System.out.println("Invalid");
+		}
+		
+		return holder;
 	}
 	
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+		mousePressed = false;
+		if(currentPiece != null && e.getX() < 800 && e.getY() < 800) {
+			Loc goalLoc = new Loc (e.getX(), e.getY());
+			double d = 0.01;
+			boolean sameLoc = goalLoc.scaledBy(d).equals(curLoc.scaledBy(d));
+			if(currentPiece.isWhite() == whiteTurn && !sameLoc) {
+				
+				King k = whiteTurn ? whiteKing: blackKing;
+				if(!k.isInCheck() || !setChecks(previousPiece, prevGoalLoc.scaledBy(d), move(currentPiece, goalLoc))) {
+					pieces = move(currentPiece, goalLoc);
+				}
+				else {
+						System.out.println("Invalid Move");
+				}
+				prevGoalLoc = goalLoc;
+				previousPiece = currentPiece;
+			}
+		}
+		else System.out.println("Cannot move here");
+	}
+
+	private boolean setChecks(Piece p, Loc end, Piece[][] holder) {
+		// TODO Auto-generated method stub
+		King k = p.isWhite() ? blackKing: whiteKing;
+		if(p.isCheckingKing(end, k.getLoc(), holder))
+			return true;
+		return false;
+	}
+
 	public void paintComponent(Graphics g) {
 		//Update 1: accounts for order of pieces/proper precedence
 		super.paintComponent(g);
@@ -181,35 +224,10 @@ public class LoadBoard extends JPanel implements MouseListener, MouseMotionListe
 		// TODO Auto-generated method stub
 		
 		if(mousePressed)
-			mouseLoc = new Loc(e.getX(), e.getY());
-		//problem is with curLoc; should be goalLoc or something...
-		
+			mouseLoc = new Loc(e.getX(), e.getY());		
 	}
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-		mousePressed = false;
-		if(currentPiece != null && e.getX() < 800 && e.getY() < 800) {
-			Loc goalLoc = new Loc (e.getX(), e.getY());
-			double d = 0.01;
-			boolean sameLoc = goalLoc.scaledBy(d).equals(curLoc.scaledBy(d));
-			if(currentPiece.isWhite() == whiteTurn && !sameLoc)
-				if(legalKings())
-					move(currentPiece, goalLoc);
-				else if(currentPiece.getName().equals("King"))
-					//moving while in check
-					move(currentPiece, goalLoc);
-				
-		}
-		else System.out.println("Cannot move here");
-	}
-	public boolean legalKings() {
-		if(whiteTurn)
-			return !whiteKing.inCheck(pieces);
-		return !blackKing.inCheck(pieces);
-	}
-
+	
+	
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		// TODO Auto-generated method stub

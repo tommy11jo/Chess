@@ -34,8 +34,27 @@ public class Rook extends Piece{
 		return false;
 	}
 	@Override
+	public boolean isCheckingKing(Loc rookLoc, Loc kingLoc, Piece[][] pieces) {
+		// TODO Auto-generated method stub
+		
+		Loc delta = rookLoc.minus(kingLoc);
+		int dx = delta.getX();
+		int dy = delta.getY();
+		
+		Piece firstIntersect = null;
+		if(dx == 0) {
+			firstIntersect = intersectPiece(rookLoc, new Loc(0, dy > 0 ? -1:1), pieces);
+		}
+		if(dy == 0) {
+			firstIntersect = intersectPiece(rookLoc, new Loc(dx > 0 ? -1: 1, 0), pieces);
+		}
+		return firstIntersect!= null && (firstIntersect.getName().equals("King") && firstIntersect.isWhite() != isWhite());
+	}
+	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
 		return "Rook";
 	}
+	
+	
 }

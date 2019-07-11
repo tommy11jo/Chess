@@ -1,9 +1,11 @@
 
 public class King extends Piece{
 	private Loc loc;
+	private boolean inCheck;
 	public King (String img) {
 		super(img);
 		super.setWhite(img.equals("WhiteKing.PNG"));
+		setInCheck(false);
 	
 	}
 	
@@ -11,6 +13,7 @@ public class King extends Piece{
 		super(img);
 		super.setWhite(img.equals("WhiteKing.PNG"));
 		this.loc = loc;
+		setInCheck(false);
 	}
 	@Override
 	public boolean isValid (Loc start, Loc end, Piece[][] pieces) {
@@ -21,25 +24,23 @@ public class King extends Piece{
 		return false;
 	}
 	
-	public boolean inCheck (Piece[][] pieces) {
-		/*8 directions (4 lines) to be tested 
-		 * (x, y)
-		 * (1, 1) and (-1, -1)
-		 * (1, -1) and (-1, 1)
-		 * (0, 1) and (0, -1)
-		 * (-1, 0) and (1, 0)
-		*/
-		boolean inCheck = false;
-		Loc dir1 = new Loc (1, 1);
-		Piece intersect = intersectPiece(dir1, pieces);
-		String intersectName = "";
-		if(intersect != null)
-			intersectName = intersect.getName();
-		if(intersect != null && intersect.isWhite() != isWhite() &&(intersectName.equals("Bishop") || intersectName.equals("Queen")))
-			return true;
-		return false;
-	}
+	
 	public Piece intersectPiece(Loc dir, Piece[][] pieces) {
+		int dx = dir.getX();
+		int dy = dir.getY();
+		
+		int c = dx > 0 ? -1: 1;
+		int d = dy > 0 ? -1: 1;
+		//System.out.println("KingLoc" + loc);
+		int x = loc.getX();
+		int y = loc.getY();
+		while(x < 8 + c && x > c && y < 8 + d && y > d) {
+			//System.out.println("x " + x + " y " + y);
+			x+=dx;
+			y+=dy;
+			if(pieces[y][x] != null)
+				return pieces[y][x];
+		}
 		return null;
 	}
 	@Override
@@ -52,5 +53,19 @@ public class King extends Piece{
 	}
 	public void setLoc(Loc loc) {
 		this.loc = loc;
+	}
+
+	@Override
+	public boolean isCheckingKing(Loc pieceLoc, Loc KingLoc, Piece[][] pieces) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public boolean isInCheck() {
+		return inCheck;
+	}
+
+	public void setInCheck(boolean inCheck) {
+		this.inCheck = inCheck;
 	}
 }

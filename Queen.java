@@ -49,4 +49,22 @@ public class Queen extends Piece{
 		// TODO Auto-generated method stub
 		return "Queen";
 	}
+	@Override
+	public boolean isCheckingKing(Loc queenLoc, Loc kingLoc, Piece[][] pieces) {
+		Loc delta = queenLoc.minus(kingLoc);
+		int dx = delta.getX();
+		int dy = delta.getY();
+		
+		Piece firstIntersect = null;
+		if(dx == 0) {
+			firstIntersect = intersectPiece(queenLoc, new Loc(0, dy > 0 ? -1:1), pieces);
+		}
+		else if(dy == 0) {
+			firstIntersect = intersectPiece(queenLoc, new Loc(dx > 0 ? -1: 1, 0), pieces);
+		}
+		else if(Math.abs(dx) == Math.abs(dy)) {
+			firstIntersect = intersectPiece(queenLoc, new Loc(dx > 0 ? -1:1, dy > 0 ? -1:1), pieces);
+		}
+		return firstIntersect!= null && (firstIntersect.getName().equals("King") && firstIntersect.isWhite() != isWhite());
+	}
 }
