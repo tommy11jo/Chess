@@ -9,4 +9,4 @@ Next Steps:
   1. Pins
   2. An engine would be cool. 
 
-![danish_gambit](img/danish_gambit.png)
+![danishGambit](danish_gambit.png)
